@@ -608,7 +608,7 @@ def update_adaptive_metrics(active_tab):
             dbc.Col([
                 html.Div([
                     html.H3(f"{failed_evasions}", className="straiker-metric-value", style={'color': '#ef4444'}),
-                    html.P("BLOCKED EVASIONS", className="straiker-metric-label")
+                    html.P("SUCCESSFUL EVASIVE ATTACKS", className="straiker-metric-label")
                 ], className="straiker-metric straiker-card")
             ], width=3)
         ])
