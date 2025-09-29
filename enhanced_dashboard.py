@@ -1939,6 +1939,7 @@ def update_multiturn_analysis(active_tab):
         table
     ]
 
+
 def create_record_card(record):
     """Create a detailed record card with enhanced metadata"""
     # Parse user_interaction_record if it exists
@@ -1969,25 +1970,21 @@ def create_record_card(record):
     explanation = record.get('explanation', 'N/A')
     
     # Helper function to create expandable text
-    def create_expandable_text(text, field_name, max_length=100):
-        if not text or text == 'N/A' or len(str(text)) <= max_length:
-            return html.Span(str(text), style={'color': '#ffffff'})
+    def create_expandable_text(text, field_name, max_length=500):
+        if not text or text == 'N/A':
+            return html.Span('N/A', style={'color': '#ffffff'})
         
         text_str = str(text)
-        short_text = text_str[:max_length] + "..."
-        full_text = text_str
         
-        # Use a simple approach with CSS hover or click
+        # Always show full text in a scrollable container for better readability
         return html.Div([
-            html.Details([
-                html.Summary([
-                    html.Span(short_text, style={'color': '#ffffff', 'cursor': 'pointer'})
-                ]),
-                html.Div([
-                    html.Span(full_text, style={'color': '#ffffff', 'whiteSpace': 'pre-wrap', 'marginTop': '10px'})
-                ])
-            ], style={'marginTop': '5px'})
-        ])
+            html.Span(f"({len(text_str)} chars): ", style={'color': '#6366f1', 'fontWeight': 'bold', 'fontSize': '12px'}),
+            html.Div([
+                html.Span(text_str, style={'color': '#ffffff', 'whiteSpace': 'pre-wrap', 'wordBreak': 'break-word'})
+            ], style={'backgroundColor': '#1f2937', 'padding': '8px', 'borderRadius': '4px', 
+                     'border': '1px solid #374151', 'maxHeight': '300px', 'overflowY': 'auto',
+                     'marginTop': '5px'})
+        ], style={'marginTop': '5px'})
     
     return html.Div([
         html.Div([
@@ -2006,7 +2003,7 @@ def create_record_card(record):
             ], style={'marginBottom': '10px'}),
             html.Div([
                 html.Span("Base Prompt: ", style={'fontWeight': 'bold', 'color': '#6366f1'}),
-                html.Span(str(record.get('base_prompt', 'N/A'))[:200] + "...", style={'color': '#ffffff'})
+                create_expandable_text(record.get('base_prompt', 'N/A'), 'base_prompt')
             ], style={'marginBottom': '10px'}),
             html.Div([
                 html.Span("Attack Prompt: ", style={'fontWeight': 'bold', 'color': '#f59e0b'}),
