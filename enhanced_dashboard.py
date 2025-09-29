@@ -1956,15 +1956,25 @@ def create_record_card(record):
         except:
             # If JSON parsing fails, try to extract from string format
             import re
-            # Look for assessment_prompt= pattern
-            prompt_match = re.search(r'assessment_prompt=([^,}]+)', user_interaction)
+            # Look for assessment_prompt= pattern - capture everything until the next field or end
+            prompt_match = re.search(r'assessment_prompt=([^,}]+(?:,[^,}]*)*)', user_interaction)
             if prompt_match:
                 attack_prompt = prompt_match.group(1).strip()
+            else:
+                # Try a more permissive pattern that captures everything after assessment_prompt=
+                prompt_match = re.search(r'assessment_prompt=(.+?)(?=,|$)', user_interaction, re.DOTALL)
+                if prompt_match:
+                    attack_prompt = prompt_match.group(1).strip()
             
-            # Look for response= pattern
-            response_match = re.search(r'response=([^,}]+)', user_interaction)
+            # Look for response= pattern - capture everything until the next field or end
+            response_match = re.search(r'response=([^,}]+(?:,[^,}]*)*)', user_interaction)
             if response_match:
                 bot_response = response_match.group(1).strip()
+            else:
+                # Try a more permissive pattern that captures everything after response=
+                response_match = re.search(r'response=(.+?)(?=,|$)', user_interaction, re.DOTALL)
+                if response_match:
+                    bot_response = response_match.group(1).strip()
     
     # Get explanation
     explanation = record.get('explanation', 'N/A')
