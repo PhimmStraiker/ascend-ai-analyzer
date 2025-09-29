@@ -1175,8 +1175,9 @@ def render_tab_content(active_tab):
         
         if evasion_control_data:
             heatmap_df = pd.DataFrame(evasion_control_data)
-            # Flip the pivot table: evasions on Y-axis, controls on X-axis
-            heatmap_pivot = heatmap_df.pivot_table(
+            
+            # Create comprehensive pivot tables for both failures and passes
+            failures_pivot = heatmap_df.pivot_table(
                 index='evasion', 
                 columns='control', 
                 values='status', 
@@ -1184,23 +1185,91 @@ def render_tab_content(active_tab):
                 fill_value=0
             )
             
-            # Create improved heatmap with flipped axes
+            passes_pivot = heatmap_df.pivot_table(
+                index='evasion', 
+                columns='control', 
+                values='status', 
+                aggfunc=lambda x: (x == 'pass').sum(),
+                fill_value=0
+            )
+            
+            # Create total tests pivot to identify cells with no tests
+            total_tests_pivot = heatmap_df.pivot_table(
+                index='evasion', 
+                columns='control', 
+                values='status', 
+                aggfunc='count',
+                fill_value=0
+            )
+            
+            # Create a custom color matrix
+            color_matrix = []
+            hover_text = []
+            
+            for i, evasion in enumerate(failures_pivot.index):
+                color_row = []
+                hover_row = []
+                for j, control in enumerate(failures_pivot.columns):
+                    failures = failures_pivot.iloc[i, j]
+                    passes = passes_pivot.iloc[i, j]
+                    total_tests = total_tests_pivot.iloc[i, j]
+                    
+                    if total_tests == 0:
+                        # No tests - gray color
+                        color_row.append(0.5)  # Neutral gray
+                        hover_row.append(f"Control: {control}<br>Evasion: {evasion}<br>No Tests: 0<br>Passes: 0<br>Failures: 0")
+                    elif failures == 0 and passes > 0:
+                        # All tests passed - green (deeper green for more passes)
+                        color_row.append(1.0 + (passes / 10))  # Scale green intensity
+                        hover_row.append(f"Control: {control}<br>Evasion: {evasion}<br>Total Tests: {total_tests}<br>Passes: {passes}<br>Failures: {failures}")
+                    else:
+                        # Some failures - red (deeper red for more failures)
+                        color_row.append(-failures)  # Negative for red scale
+                        hover_row.append(f"Control: {control}<br>Evasion: {evasion}<br>Total Tests: {total_tests}<br>Passes: {passes}<br>Failures: {failures}")
+                
+                color_matrix.append(color_row)
+                hover_text.append(hover_row)
+            
+            # Create improved heatmap with custom coloring
             heatmap_fig = px.imshow(
-                heatmap_pivot.values,
-                x=heatmap_pivot.columns,
-                y=heatmap_pivot.index,
-                color_continuous_scale=['#10b981', '#ef4444'],
-                title="Control-Evasion Attack Matrix (Red = Failures, Green = Success)",
-                labels=dict(x="Control ID", y="Evasion Technique", color="Failures")
+                color_matrix,
+                x=failures_pivot.columns,
+                y=failures_pivot.index,
+                color_continuous_scale=['#ef4444', '#6b7280', '#10b981', '#059669'],  # Red -> Gray -> Light Green -> Dark Green
+                title="Control-Evasion Attack Matrix (Red = Failures, Gray = No Tests, Green = Passes)",
+                labels=dict(x="Control ID", y="Evasion Technique", color="Test Results")
+            )
+            
+            # Add hover text
+            heatmap_fig.update_traces(
+                hovertemplate="%{customdata}<extra></extra>",
+                customdata=hover_text
             )
             heatmap_fig.update_layout(
                 height=800,
                 paper_bgcolor='#1a1a1a',
                 plot_bgcolor='#1a1a1a',
                 font_color='#ffffff',
-                xaxis=dict(color='#ffffff', tickangle=45),
-                yaxis=dict(color='#ffffff'),
+                xaxis=dict(
+                    color='#ffffff', 
+                    tickangle=45,
+                    showgrid=True,
+                    gridcolor='rgba(99, 102, 241, 0.2)',
+                    gridwidth=1
+                ),
+                yaxis=dict(
+                    color='#ffffff',
+                    showgrid=True,
+                    gridcolor='rgba(99, 102, 241, 0.2)',
+                    gridwidth=1
+                ),
                 font=dict(size=12)
+            )
+            
+            # Add row and column highlighting on hover
+            heatmap_fig.update_traces(
+                selector=dict(type='heatmap'),
+                hoverongaps=False
             )
             
             # Create interactive pie chart for attack paths using the same data
