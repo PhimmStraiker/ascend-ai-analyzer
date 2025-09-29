@@ -1782,33 +1782,33 @@ def handle_attack_paths_click(attack_click, matrix_click):
         
         if is_final_level and evasion and control:
             print(f"DEBUG: Final level detected - Evasion: {evasion}, Control: {control}")
+            
+            # Filter for records that match this specific evasion-control combination
+            filtered_data = data[
+                data['evasions_applied'].apply(
+                    lambda x: any(evasion in str(e) for e in x) if isinstance(x, list) else False
+                ) & 
+                (data['control_id'] == control) &
+                (data['status'] == 'fail')  # Only show failed attacks
+            ]
+            
+            if not filtered_data.empty:
+                # Create detailed record cards
+                record_cards = []
+                for _, record in filtered_data.head(10).iterrows():
+                    record_cards.append(create_record_card(record))
                 
-                # Filter for records that match this specific evasion-control combination
-                filtered_data = data[
-                    data['evasions_applied'].apply(
-                        lambda x: any(evasion in str(e) for e in x) if isinstance(x, list) else False
-                    ) & 
-                    (data['control_id'] == control) &
-                    (data['status'] == 'fail')  # Only show failed attacks
+                content = [
+                    html.H5(f"Attack Path: {evasion} → {control}", className="text-white mb-3"),
+                    html.P(f"Found {len(filtered_data)} failed attacks", className="text-muted mb-3"),
+                    html.Div(record_cards, className="record-cards")
                 ]
                 
-                if not filtered_data.empty:
-                    # Create detailed record cards
-                    record_cards = []
-                    for _, record in filtered_data.head(10).iterrows():
-                        record_cards.append(create_record_card(record))
-                    
-                    content = [
-                        html.H5(f"Attack Path: {evasion} → {control}", className="text-white mb-3"),
-                        html.P(f"Found {len(filtered_data)} failed attacks", className="text-muted mb-3"),
-                        html.Div(record_cards, className="record-cards")
-                    ]
-                    
-                    return True, content
-                else:
-                    return True, dbc.Alert("No failed attacks found for this evasion-control combination", color="info")
+                return True, content
             else:
-                # Not at final level, don't show popup
+                return True, dbc.Alert("No failed attacks found for this evasion-control combination", color="info")
+        else:
+            # Not at final level, don't show popup
             print(f"DEBUG: Not final level - is_final_level: {is_final_level}, evasion: {evasion}, control: {control}")
             return False, ""
     
@@ -1983,16 +1983,16 @@ def create_record_card(record):
         full_text = text_str
         
         return html.Details([
-            html.Summary([
+                html.Summary([
                 html.Span(f"({len(text_str)} chars): ", style={'color': '#6366f1', 'fontWeight': 'bold', 'fontSize': '12px'}),
                 html.Span(short_text, style={'color': '#ffffff', 'whiteSpace': 'pre-wrap', 'wordBreak': 'break-word'}),
                 html.Span(" (click to expand)", style={'color': '#9ca3af', 'fontSize': '12px', 'marginLeft': '5px'})
             ], style={'cursor': 'pointer', 'color': '#ffffff'}),
-            html.Div([
+                html.Div([
                 html.Span(full_text, style={'color': '#ffffff', 'whiteSpace': 'pre-wrap', 'wordBreak': 'break-word'})
             ], style={'marginTop': '8px', 'padding': '8px', 'backgroundColor': '#1f2937', 
                      'borderRadius': '4px', 'border': '1px solid #374151'})
-        ], style={'marginTop': '5px'})
+            ], style={'marginTop': '5px'})
     
     return html.Div([
         html.Div([
