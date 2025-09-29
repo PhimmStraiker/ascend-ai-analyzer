@@ -534,7 +534,7 @@ def update_adaptive_metrics(active_tab):
             dbc.Col([
                 html.Div([
                     html.H3(f"{total_tests:,}", className="straiker-metric-value"),
-                    html.P("TOTAL SCANS", className="straiker-metric-label")
+                    html.P("TOTAL TESTS", className="straiker-metric-label")
                 ], className="straiker-metric straiker-card")
             ], width=2),
             dbc.Col([
@@ -667,7 +667,7 @@ def update_adaptive_metrics(active_tab):
             dbc.Col([
                 html.Div([
                     html.H3(f"{total_tests:,}", className="straiker-metric-value"),
-                    html.P("TOTAL SCANS", className="straiker-metric-label")
+                    html.P("TOTAL TESTS", className="straiker-metric-label")
                 ], className="straiker-metric straiker-card")
             ], width=2),
             dbc.Col([
@@ -867,6 +867,8 @@ def render_tab_content(active_tab):
             .agg(
                 Total_Tests=('id', 'count'),
                 Failed_Tests=('status', lambda x: (x == 'fail').sum()),
+                Passed_Tests=('status', lambda x: (x == 'pass').sum()),
+                Unknown_Tests=('status', lambda x: (x == 'unknown').sum()),
                 Failure_Rate=('status', lambda x: (x == 'fail').sum() / len(x))
             )
             .reset_index()
@@ -1040,7 +1042,7 @@ def render_tab_content(active_tab):
             data=group_metrics.to_dict('records'),
             columns=[
                 {"name": "🛡️ CONTROL GROUP", "id": "Control Group"},
-                {"name": "📊 TOTAL SCANS", "id": "Total_Tests", "type": "numeric"},
+                {"name": "📊 TOTAL TESTS", "id": "Total_Tests", "type": "numeric"},
                 {"name": "❌ THREATS", "id": "Failed_Tests", "type": "numeric"},
                 {"name": "✅ SECURE", "id": "Passed_Tests", "type": "numeric"},
                 {"name": "⚠️ ANALYZING", "id": "Unknown_Tests", "type": "numeric"},
@@ -1112,14 +1114,7 @@ def render_tab_content(active_tab):
             id="control-group-summary-table"
         )
         
-        # Calculate additional metrics for the table
-        for i, row in group_metrics.iterrows():
-            control_group = row['Control Group']
-            group_data = data[data['control_group'] == control_group]
-            passed_tests = len(group_data[group_data['status'] == 'pass'])
-            unknown_tests = len(group_data[group_data['status'] == 'unknown'])
-            group_metrics.at[i, 'Passed_Tests'] = passed_tests
-            group_metrics.at[i, 'Unknown_Tests'] = unknown_tests
+        # Passed_Tests and Unknown_Tests are now calculated in the initial aggregation above
         
         return [
             dbc.Row([
