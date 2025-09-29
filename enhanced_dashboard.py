@@ -596,7 +596,7 @@ def update_adaptive_metrics(active_tab):
             dbc.Col([
                 html.Div([
                     html.H3(f"{unique_evasions}", className="straiker-metric-value", style={'color': '#8b5cf6'}),
-                    html.P("EVASION TECHNIQUES", className="straiker-metric-label")
+                    html.P("UNIQUE EVASIONS USED", className="straiker-metric-label")
                 ], className="straiker-metric straiker-card")
             ], width=3),
             dbc.Col([
