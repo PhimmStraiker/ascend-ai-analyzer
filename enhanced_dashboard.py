@@ -431,7 +431,7 @@ app.layout = dbc.Container([
     dbc.Row([
         dbc.Col([
             html.Div([
-                dbc.Tabs([
+    dbc.Tabs([
                     dbc.Tab(
                         label="🔬 OVERVIEW",
                         tab_id="overview",
@@ -637,13 +637,13 @@ def update_adaptive_metrics(active_tab):
         
         return dbc.Row([
             dbc.Col([
-                html.Div([
+                        html.Div([
                     html.H3(f"🛡️ {passed_controls}", className="straiker-metric-value", style={'color': '#10b981'}),
                     html.P("SECURE CONTROLS", className="straiker-metric-label")
                 ], className="straiker-metric straiker-card", id="passed-controls-card", style={"cursor": "pointer"})
             ], width=3),
             dbc.Col([
-                html.Div([
+                        html.Div([
                     html.H3(f"⚠️ {failed_controls}", className="straiker-metric-value", style={'color': '#ef4444'}),
                     html.P("COMPROMISED", className="straiker-metric-label")
                 ], className="straiker-metric straiker-card", id="failed-controls-card", style={"cursor": "pointer"})
@@ -1120,7 +1120,7 @@ def render_tab_content(active_tab):
             unknown_tests = len(group_data[group_data['status'] == 'unknown'])
             group_metrics.at[i, 'Passed_Tests'] = passed_tests
             group_metrics.at[i, 'Unknown_Tests'] = unknown_tests
-
+        
         return [
             dbc.Row([
                 dbc.Col([
@@ -1782,33 +1782,33 @@ def handle_attack_paths_click(attack_click, matrix_click):
         
         if is_final_level and evasion and control:
             print(f"DEBUG: Final level detected - Evasion: {evasion}, Control: {control}")
-            
-            # Filter for records that match this specific evasion-control combination
-            filtered_data = data[
-                data['evasions_applied'].apply(
-                    lambda x: any(evasion in str(e) for e in x) if isinstance(x, list) else False
-                ) & 
-                (data['control_id'] == control) &
-                (data['status'] == 'fail')  # Only show failed attacks
-            ]
-            
-            if not filtered_data.empty:
-                # Create detailed record cards
-                record_cards = []
-                for _, record in filtered_data.head(10).iterrows():
-                    record_cards.append(create_record_card(record))
                 
-                content = [
-                    html.H5(f"Attack Path: {evasion} → {control}", className="text-white mb-3"),
-                    html.P(f"Found {len(filtered_data)} failed attacks", className="text-muted mb-3"),
-                    html.Div(record_cards, className="record-cards")
+                # Filter for records that match this specific evasion-control combination
+                filtered_data = data[
+                    data['evasions_applied'].apply(
+                        lambda x: any(evasion in str(e) for e in x) if isinstance(x, list) else False
+                    ) & 
+                    (data['control_id'] == control) &
+                    (data['status'] == 'fail')  # Only show failed attacks
                 ]
                 
-                return True, content
+                if not filtered_data.empty:
+                    # Create detailed record cards
+                    record_cards = []
+                    for _, record in filtered_data.head(10).iterrows():
+                        record_cards.append(create_record_card(record))
+                    
+                    content = [
+                        html.H5(f"Attack Path: {evasion} → {control}", className="text-white mb-3"),
+                        html.P(f"Found {len(filtered_data)} failed attacks", className="text-muted mb-3"),
+                        html.Div(record_cards, className="record-cards")
+                    ]
+                    
+                    return True, content
+                else:
+                    return True, dbc.Alert("No failed attacks found for this evasion-control combination", color="info")
             else:
-                return True, dbc.Alert("No failed attacks found for this evasion-control combination", color="info")
-        else:
-            # Not at final level, don't show popup
+                # Not at final level, don't show popup
             print(f"DEBUG: Not final level - is_final_level: {is_final_level}, evasion: {evasion}, control: {control}")
             return False, ""
     
@@ -1970,20 +1970,28 @@ def create_record_card(record):
     explanation = record.get('explanation', 'N/A')
     
     # Helper function to create expandable text
-    def create_expandable_text(text, field_name, max_length=500):
+    def create_expandable_text(text, field_name, max_length=200):
         if not text or text == 'N/A':
             return html.Span('N/A', style={'color': '#ffffff'})
         
         text_str = str(text)
+        if len(text_str) <= max_length:
+            return html.Span(text_str, style={'color': '#ffffff', 'whiteSpace': 'pre-wrap', 'wordBreak': 'break-word'})
         
-        # Always show full text in a scrollable container for better readability
-        return html.Div([
-            html.Span(f"({len(text_str)} chars): ", style={'color': '#6366f1', 'fontWeight': 'bold', 'fontSize': '12px'}),
+        # Use HTML details/summary for native expand/collapse functionality
+        short_text = text_str[:max_length] + "..."
+        full_text = text_str
+        
+        return html.Details([
+            html.Summary([
+                html.Span(f"({len(text_str)} chars): ", style={'color': '#6366f1', 'fontWeight': 'bold', 'fontSize': '12px'}),
+                html.Span(short_text, style={'color': '#ffffff', 'whiteSpace': 'pre-wrap', 'wordBreak': 'break-word'}),
+                html.Span(" (click to expand)", style={'color': '#9ca3af', 'fontSize': '12px', 'marginLeft': '5px'})
+            ], style={'cursor': 'pointer', 'color': '#ffffff'}),
             html.Div([
-                html.Span(text_str, style={'color': '#ffffff', 'whiteSpace': 'pre-wrap', 'wordBreak': 'break-word'})
-            ], style={'backgroundColor': '#1f2937', 'padding': '8px', 'borderRadius': '4px', 
-                     'border': '1px solid #374151', 'maxHeight': '300px', 'overflowY': 'auto',
-                     'marginTop': '5px'})
+                html.Span(full_text, style={'color': '#ffffff', 'whiteSpace': 'pre-wrap', 'wordBreak': 'break-word'})
+            ], style={'marginTop': '8px', 'padding': '8px', 'backgroundColor': '#1f2937', 
+                     'borderRadius': '4px', 'border': '1px solid #374151'})
         ], style={'marginTop': '5px'})
     
     return html.Div([
