@@ -580,12 +580,19 @@ def update_adaptive_metrics(active_tab):
             evasions_df = pd.DataFrame(evasion_data)
             unique_evasions = len(evasions_df['evasion'].unique())
             failed_evasions = len(evasions_df[evasions_df['status'] == 'fail'])
-            evasion_success_rate = 1 - (failed_evasions / len(evasions_df)) if len(evasions_df) > 0 else 0
+            # Evasion Success rate = failed tests / total attempts with evasions
+            evasion_success_rate = failed_evasions / len(evasions_df) if len(evasions_df) > 0 else 0
         else:
             unique_evasions = failed_evasions = 0
             evasion_success_rate = 0
             
         return dbc.Row([
+            dbc.Col([
+                html.Div([
+                    html.H3(f"{len(evasion_data)}", className="straiker-metric-value", style={'color': '#f59e0b'}),
+                    html.P("ATTEMPTS WITH EVASIONS", className="straiker-metric-label")
+                ], className="straiker-metric straiker-card")
+            ], width=3),
             dbc.Col([
                 html.Div([
                     html.H3(f"{unique_evasions}", className="straiker-metric-value", style={'color': '#8b5cf6'}),
@@ -602,12 +609,6 @@ def update_adaptive_metrics(active_tab):
                 html.Div([
                     html.H3(f"{failed_evasions}", className="straiker-metric-value", style={'color': '#ef4444'}),
                     html.P("BLOCKED EVASIONS", className="straiker-metric-label")
-                ], className="straiker-metric straiker-card")
-            ], width=3),
-            dbc.Col([
-                html.Div([
-                    html.H3(f"{len(evasion_data)}", className="straiker-metric-value", style={'color': '#f59e0b'}),
-                    html.P("TOTAL ATTEMPTS", className="straiker-metric-label")
                 ], className="straiker-metric straiker-card")
             ], width=3)
         ])
@@ -635,7 +636,19 @@ def update_adaptive_metrics(active_tab):
         multiturn_with_evasions = len(multiturn_data[multiturn_data['has_evasions'] == True])
         successful_multiturn = len(multiturn_data[multiturn_data['status'] == 'fail'])
         
+        # Calculate total number of controls tested
+        if 'control_id' in data.columns:
+            total_controls_tested = len(data['control_id'].unique())
+        else:
+            total_controls_tested = 0
+        
         return dbc.Row([
+            dbc.Col([
+                html.Div([
+                    html.H3(f"🔧 {total_controls_tested}", className="straiker-metric-value", style={'color': '#6366f1'}),
+                    html.P("TOTAL CONTROLS TESTED", className="straiker-metric-label")
+                ], className="straiker-metric straiker-card")
+            ], width=3),
             dbc.Col([
                         html.Div([
                     html.H3(f"🛡️ {passed_controls}", className="straiker-metric-value", style={'color': '#10b981'}),
@@ -652,12 +665,6 @@ def update_adaptive_metrics(active_tab):
                 html.Div([
                     html.H3(f"{total_failure_rate:.1%}", className="straiker-metric-value", style={'color': '#f59e0b'}),
                     html.P("THREAT LEVEL", className="straiker-metric-label")
-                ], className="straiker-metric straiker-card")
-            ], width=3),
-            dbc.Col([
-                html.Div([
-                    html.H3(f"⚡ {multiturn_count}", className="straiker-metric-value", style={'color': '#8b5cf6'}),
-                    html.P("MULTI-ATTACKS", className="straiker-metric-label")
                 ], className="straiker-metric straiker-card")
             ], width=3)
         ])
