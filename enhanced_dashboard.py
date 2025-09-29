@@ -1980,19 +1980,33 @@ def create_record_card(record):
         
         # Use HTML details/summary for native expand/collapse functionality
         short_text = text_str[:max_length] + "..."
-        full_text = text_str
+        full_text = text_str  # Ensure full text is used without any truncation
         
         return html.Details([
-                html.Summary([
+            html.Summary([
                 html.Span(f"({len(text_str)} chars): ", style={'color': '#6366f1', 'fontWeight': 'bold', 'fontSize': '12px'}),
                 html.Span(short_text, style={'color': '#ffffff', 'whiteSpace': 'pre-wrap', 'wordBreak': 'break-word'}),
                 html.Span(" (click to expand)", style={'color': '#9ca3af', 'fontSize': '12px', 'marginLeft': '5px'})
             ], style={'cursor': 'pointer', 'color': '#ffffff'}),
-                html.Div([
-                html.Span(full_text, style={'color': '#ffffff', 'whiteSpace': 'pre-wrap', 'wordBreak': 'break-word'})
-            ], style={'marginTop': '8px', 'padding': '8px', 'backgroundColor': '#1f2937', 
-                     'borderRadius': '4px', 'border': '1px solid #374151'})
-            ], style={'marginTop': '5px'})
+            html.Div([
+                html.Span(full_text, style={
+                    'color': '#ffffff', 
+                    'whiteSpace': 'pre-wrap', 
+                    'wordBreak': 'break-word',
+                    'maxHeight': 'none',  # Remove any height restrictions
+                    'overflow': 'visible',  # Ensure text is not clipped
+                    'display': 'block'
+                })
+            ], style={
+                'marginTop': '8px', 
+                'padding': '8px', 
+                'backgroundColor': '#1f2937', 
+                'borderRadius': '4px', 
+                'border': '1px solid #374151',
+                'maxHeight': 'none',  # Remove height restrictions
+                'overflow': 'visible'  # Ensure content is not clipped
+            })
+        ], style={'marginTop': '5px'})
     
     return html.Div([
         html.Div([
